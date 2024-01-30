@@ -128,10 +128,10 @@ app.post(
 // Hashes the password and inserts the info into the `user` table
 app.post('/register', async function (req, res) {
   try {
-    console.log('req.body', req.body);
     const { password, username } = req.body;
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('username', username);
+
     const [user] = await req.db.query(
       `INSERT INTO user (user_name, password)
       VALUES (:username, :hashedPassword);`,
@@ -140,10 +140,10 @@ app.post('/register', async function (req, res) {
 
     const jwtEncodedUser = jwt.sign({ userId: user.insertId, ...req.body }, process.env.JWT_KEY);
 
-    res.json({ jwt: jwtEncodedUser });
+    res.json({ jwt: jwtEncodedUser, success: true });
   } catch (error) {
     console.log('error', error);
-    res.json({ err });
+    res.json({ error, success: false });
   }
 });
 
@@ -152,9 +152,18 @@ app.post('/log-in', async function (req, res) {
     const { username, password: userEnteredPassword } = req.body;
     const [[user]] = await req.db.query(`SELECT * FROM user WHERE user_name = :username`, { username });
 
-    if (!user) res.json('Username not found');
+    if (!user) {
+      res.json('Username not found');
+      return;
+    }
+
+    // if (!user || !user.password) {
+    //   res.json('User or password is not defined');
+    // }
 
     const hashedPassword = `${user.password}`;
+    // const hashedPassword = user.password;
+
     const passwordMatches = await bcrypt.compare(userEnteredPassword, hashedPassword);
 
     if (passwordMatches) {
@@ -165,9 +174,9 @@ app.post('/log-in', async function (req, res) {
 
       const jwtEncodedUser = jwt.sign(payload, process.env.JWT_KEY);
 
-      res.json({ jwt: jwtEncodedUser });
+      res.json({ jwt: jwtEncodedUser, success: true });
     } else {
-      res.json('Password not found');
+      res.json({ error: 'Invalid password', success: false });
     }
   } catch (err) {
     console.log('Error in /authenticate', err);
@@ -178,7 +187,10 @@ app.post('/log-in', async function (req, res) {
 app.use(async function verifyJwt(req, res, next) {
   const { authorization: authHeader } = req.headers;
 
-  if (!authHeader) res.json('Invalid authorization, no authorization headers');
+  if (!authHeader) {
+    res.json('Invalid authorization, no authorization headers');
+    return;
+  }
 
   const [scheme, jwtToken] = authHeader.split(' ');
 
