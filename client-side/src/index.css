@@ -18,6 +18,7 @@
 @import 'tailwindcss/utilities';
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
 :root {
   font-family: 'Poppins', sans-serif;
   line-height: 1.5;
@@ -28,8 +29,17 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* body,
+.bg-background {
+  /* background-image: url('/src/assets/book-bg2.jpg'); */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+body,
 html {
+  height: 100%;
   margin: 0;
   padding: 0;
-} */
+}

@@ -20,6 +20,11 @@ const LoginPage = () => {
   };
 
   const handleLoginClick = async () => {
+    if (!username || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
     const { jwt, success } = await LogIn({ username, password });
 
     if (success) {
@@ -27,11 +32,12 @@ const LoginPage = () => {
       navigate('/home');
     } else {
       setError('Invalid Username or Password');
+      return;
     }
   };
 
   return (
-    <div id="page">
+    <div className="w-full h-screen bg-background flex justify-center items-center">
       <Form
         handleUsernameChange={handleUsernameChange}
         handlePasswordChange={handlePasswordChange}
