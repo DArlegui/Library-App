@@ -130,6 +130,10 @@ app.post('/register', async function (req, res) {
   try {
     const { password, username } = req.body;
 
+    if (!password || !username) {
+      return res.json({ error: 'Username or password is not defined!', success: false });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [user] = await req.db.query(
@@ -152,18 +156,12 @@ app.post('/log-in', async function (req, res) {
     const { username, password: userEnteredPassword } = req.body;
     const [[user]] = await req.db.query(`SELECT * FROM user WHERE user_name = :username`, { username });
 
-    if (!user) {
-      res.json('Username not found');
+    if (!user || !user.password) {
+      res.json({ error: 'User or password is not defined!', success: false });
       return;
     }
 
-    // if (!user || !user.password) {
-    //   res.json('User or password is not defined');
-    // }
-
     const hashedPassword = `${user.password}`;
-    // const hashedPassword = user.password;
-
     const passwordMatches = await bcrypt.compare(userEnteredPassword, hashedPassword);
 
     if (passwordMatches) {
