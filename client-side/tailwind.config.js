@@ -7,7 +7,12 @@ export default {
     './components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      backgroundImage: {
+        'custom-bg-1': "url('/src/assets/book-bg1.jpg')",
+        'custom-bg-2': "url('/src/assets/book-bg2.jpg')",
+      },
+    },
   },
   plugins: [],
 };

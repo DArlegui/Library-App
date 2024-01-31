@@ -37,7 +37,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-background flex justify-center items-center">
+    <div className="w-full h-screen bg-background flex justify-center items-center bg-custom-bg-2 bg-background">
       <Form
         handleUsernameChange={handleUsernameChange}
         handlePasswordChange={handlePasswordChange}

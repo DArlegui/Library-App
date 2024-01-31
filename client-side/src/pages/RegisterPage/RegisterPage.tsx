@@ -51,7 +51,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-background flex justify-center items-center">
+    <div className="w-full h-screen flex justify-center items-center bg-custom-bg-1 bg-background">
       <Form
         handleUsernameChange={handleUsernameChange}
         handlePasswordChange={handlePasswordChange}
