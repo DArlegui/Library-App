@@ -46,7 +46,7 @@ const RegisterPage = () => {
       localStorage.setItem('car-app-jwt', jwt);
       navigate('/home');
     } else {
-      alert('Name already taken');
+      setError('Username already taken');
     }
   };
 
