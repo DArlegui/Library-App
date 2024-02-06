@@ -92,37 +92,6 @@ app.get('/books/:id', async function (req, res) {
   }
 });
 
-app.post(
-  '/books',
-  [
-    // Validation middleware
-    check('title').notEmpty().withMessage('Title is required'),
-    check('author').notEmpty().withMessage('Author is required'),
-    check('year').isInt().withMessage('Year must be a valid integer'),
-  ],
-  async (req, res) => {
-    try {
-      // Check for validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, message: 'Validation error', errors: errors.array() });
-      }
-
-      const { title, author, year } = req.body;
-      const [book] = await req.db.query('INSERT INTO books (title, author, year) VALUES (?,?,?)', [
-        title,
-        author,
-        year,
-      ]);
-
-      res.status(201).json({ success: true, message: 'Book successfully created', data: book });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Internal server error', data: null });
-    }
-  }
-);
-
 /* LOGIN DB BELOW */
 
 // Hashes the password and inserts the info into the `user` table
@@ -211,6 +180,45 @@ app.use(async function verifyJwt(req, res, next) {
 
   await next();
 });
+
+app.post(
+  '/books',
+  [
+    // Validation middleware
+    check('title').notEmpty().withMessage('Title is required'),
+    check('author').notEmpty().withMessage('Author is required'),
+    check('year').isInt().withMessage('Year must be a valid integer'),
+  ],
+  async (req, res) => {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, message: 'Validation error', errors: errors.array() });
+      }
+
+      const { title, author, year } = req.body;
+      const { userId } = req.user;
+
+      const [insert] = await req.db.query(
+        'INSERT INTO books (title, author, year, user_id) VALUES (:title, :author, :year, :user_id,)',
+        { title, author, year, user_id: userId }
+      );
+
+      //Attaches JSON content to the response
+      res.status(201).json({
+        id: insert.insertId,
+        title,
+        author,
+        year,
+        user_id: userId,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Internal server error', data: null });
+    }
+  }
+);
 
 // Start the Express server
 app.listen(port, () => {

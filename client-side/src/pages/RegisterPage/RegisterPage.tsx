@@ -43,7 +43,7 @@ const RegisterPage = () => {
     const { jwt, success } = await register({ username, password });
 
     if (success) {
-      localStorage.setItem('car-app-jwt', jwt);
+      localStorage.setItem('book-app-jwt', jwt);
       navigate('/home');
     } else {
       setError('Username already taken');
