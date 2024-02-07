@@ -2,8 +2,14 @@
 import { API_URL } from '../environment';
 import { getJwt } from './JwtService';
 
-export const createBook = async (body: any) => {
-  const res = await fetch(`${API_URL}/book`, {
+export type BookType = {
+  title: string;
+  author: string;
+  year: number;
+};
+
+export const createBook = async (body: BookType) => {
+  const res = await fetch(`${API_URL}/books`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -11,6 +17,7 @@ export const createBook = async (body: any) => {
     },
     body: JSON.stringify(body),
   });
+  console.log(JSON.stringify(body));
 
   const data = await res.json();
 

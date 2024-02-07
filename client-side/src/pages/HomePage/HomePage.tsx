@@ -1,40 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { createBook } from '../../api/BookService';
+import { BookType, createBook } from '../../api/BookService';
 import NavBar from '../../components/NavBar';
 
 const HomePage = () => {
-  const [newTitle, setTitle] = useState('');
-  const [newAuthor, setAuthor] = useState('');
-  const [newYear, setYear] = useState('');
+  const [book, setBook] = useState<BookType>({ title: '', author: '', year: 0 });
   const [error, setError] = useState('');
 
-  const handleCreateBook = () => {
-    createBook({
-      Title: newTitle,
-      Author: newAuthor,
-      Year: newYear,
-    });
+  const handleCreateBook = async () => {
+    if (!book.title || !book.author || !book.year) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (isNaN(book.year)) {
+      setError('Year must be a number');
+      return;
+    }
+
+    console.log(book);
+    const result = await createBook(book);
+
+    console.log(result);
+    return;
   };
-
-  // const handleAddBook = async () => {
-  //   const title = (document.getElementById('new-book-title-input') as HTMLInputElement).value;
-  //   const author = (document.getElementById('new-book-author-input') as HTMLInputElement).value;
-  //   const year = (document.getElementById('new-book-Year-input') as HTMLInputElement).value;
-
-  //   if (!title || !author || !year) {
-  //     setError('Please fill in all fields');
-  //     return;
-  //   }
-
-  //   const success = await createBook({ title, author, year });
-
-  //   if (success) {
-  //     alert('Book Added');
-  //   } else {
-  //     setError('Failed to Add Book');
-  //   }
-  // };
 
   return (
     <div className="">
@@ -50,7 +39,12 @@ const HomePage = () => {
               type="text"
               id="new-book-title-input"
               className="border border-gray-300 rounded-md p-2"
-              onChange={(e: any) => setTitle(e.target.value)}
+              onChange={(e) =>
+                setBook((b) => ({
+                  ...b,
+                  title: e.target.value,
+                }))
+              }
             />
           </div>
           <div className="my-4 flex items-center">
@@ -61,7 +55,12 @@ const HomePage = () => {
               type="text"
               id="new-book-author-input"
               className="border border-gray-300 rounded-md p-2"
-              onChange={(e: any) => setAuthor(e.target.value)}
+              onChange={(e: any) =>
+                setBook((b) => ({
+                  ...b,
+                  author: e.target.value,
+                }))
+              }
             />
           </div>
           <div className="my-4 flex items-center">
@@ -72,7 +71,12 @@ const HomePage = () => {
               type="text"
               id="new-book-Year-input"
               className="border border-gray-300 rounded-md p-2"
-              onChange={(e: any) => setYear(e.target.value)}
+              onChange={(e: any) =>
+                setBook((b) => ({
+                  ...b,
+                  year: e.target.value,
+                }))
+              }
             />
           </div>
           {error && <div className="text-red-500">{error}</div>}
