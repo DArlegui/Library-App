@@ -53,46 +53,22 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.delete('/books/:id', async (req, res) => {
-  try {
-    const bookId = req.params.id;
-    await req.db.query(`UPDATE books SET deleted_flag = 1 WHERE id = ?`, [bookId]);
-    res.status(200).json({ success: true, message: 'Book successfully deleted' });
-  } catch (err) {
-    res.status(400).json({ success: false, message: 'Bad request', data: null });
-  }
-});
+// app.get('/books/:id', async function (req, res) {
+//   try {
+//     const bookId = req.params.id;
+//     const [book] = await req.db.query('SELECT * FROM books WHERE id = ? LIMIT 1', [bookId]);
 
-app.get('/books', async (req, res) => {
-  try {
-    // Execute a SQL query to retrieve cars from the database
-    const [books] = await req.db.query(`SELECT * FROM books WHERE deleted_flag = 0`);
-
-    // Send a JSON response with the retrieved cars
-    res.status(200).json({ success: true, message: 'Books successfully retrieved', data: books });
-  } catch (err) {
-    // Handle errors that may occur during the execution of the try block
-    res.status(400).json({ success: false, message: 'Bad request', data: null });
-  }
-});
-
-app.get('/books/:id', async function (req, res) {
-  try {
-    const bookId = req.params.id;
-    const [book] = await req.db.query('SELECT * FROM books WHERE id = ? LIMIT 1', [bookId]);
-
-    if (!book || book.length === 0) {
-      res.status(404).json({ success: false, message: 'Book not found', data: null });
-    } else {
-      res.status(200).json({ success: true, message: 'Book retrieved successfully', data: book });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Internal server error', data: null });
-  }
-});
+//     if (!book || book.length === 0) {
+//       res.status(404).json({ success: false, message: 'Book not found', data: null });
+//     } else {
+//       res.status(200).json({ success: true, message: 'Book retrieved successfully', data: book });
+//     }
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: 'Internal server error', data: null });
+//   }
+// });
 
 /* LOGIN DB BELOW */
-
 // Hashes the password and inserts the info into the `user` table
 app.post('/register', async function (req, res) {
   try {
@@ -181,23 +157,40 @@ app.use(async function verifyJwt(req, res, next) {
 });
 
 app.post('/books', async (req, res) => {
-  const { title, author, year } = req.body;
+  const { img_url, title, author, year } = req.body;
   const { userId } = req.user;
 
   const [insert] = await req.db.query(
-    `INSERT INTO books (title, author, year, user_id, deleted_flag) 
-    VALUES (:title, :author, :year, :user_id, :deleted_flag)`,
-    { title, author, year, user_id: userId, deleted_flag: 0 }
+    `INSERT INTO books (img_url, title, author, year, user_id, date_created, deleted_flag) 
+    VALUES (:img_url, :title, :author, :year, :user_id, NOW(), :deleted_flag)`,
+    { img_url, title, author, year, user_id: userId, deleted_flag: 0 }
   );
 
-  //Attaches JSON content to the response
+  //To Check
   res.status(201).json({
     id: insert.insertId,
+    img_url,
     title,
     author,
     year,
     userId,
   });
+});
+
+app.get('/books', async (req, res) => {
+  const { userId } = req.user;
+  const [books] = await req.db.query('SELECT * FROM books WHERE user_id = :userId AND deleted_flag = 0', { userId });
+
+  res.status(200).json({ books });
+});
+
+app.delete('/books/:id', async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.user;
+
+  await req.db.query('UPDATE books SET deleted_flag = 1 WHERE id = :id AND user_id = :userId', { id, userId });
+
+  res.status(204).json({ success: true, message: 'Book successfully deleted' });
 });
 
 // Start the Express server
