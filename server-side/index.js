@@ -1,11 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
-import { validationResult, check } from 'express-validator';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import mysql from 'mysql2/promise';
 dotenv.config(); // Allows us to access the .env
 
 const app = express();
@@ -41,7 +40,7 @@ app.use(async (req, res, next) => {
     await req.db.query(`SET time_zone = '-8:00'`);
 
     // Moves the request on down the line to the next middleware functions and/or the endpoint it's headed for
-    await next();
+    next();
 
     // After the endpoint has been reached and resolved, disconnects from the database
     req.db.release();
@@ -150,7 +149,7 @@ app.post('/log-in', async function (req, res) {
   }
 });
 
-// Jwt verification checks to see if there is an authorization header with a valid jwt in it.
+//Jwt verification checks to see if there is an authorization header with a valid jwt in it.
 app.use(async function verifyJwt(req, res, next) {
   const { authorization: authHeader } = req.headers;
 
@@ -181,44 +180,25 @@ app.use(async function verifyJwt(req, res, next) {
   await next();
 });
 
-app.post(
-  '/books',
-  [
-    // Validation middleware
-    check('title').notEmpty().withMessage('Title is required'),
-    check('author').notEmpty().withMessage('Author is required'),
-    check('year').isInt().withMessage('Year must be a valid integer'),
-  ],
-  async (req, res) => {
-    try {
-      // Check for validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, message: 'Validation error', errors: errors.array() });
-      }
+app.post('/books', async (req, res) => {
+  const { title, author, year } = req.body;
+  const { userId } = req.user;
 
-      const { title, author, year } = req.body;
-      const { userId } = req.user;
+  const [insert] = await req.db.query(
+    `INSERT INTO books (title, author, year, user_id, deleted_flag) 
+    VALUES (:title, :author, :year, :user_id, :deleted_flag)`,
+    { title, author, year, user_id: userId, deleted_flag: 0 }
+  );
 
-      const [insert] = await req.db.query(
-        'INSERT INTO books (title, author, year, user_id) VALUES (:title, :author, :year, :user_id,)',
-        { title, author, year, user_id: userId }
-      );
-
-      //Attaches JSON content to the response
-      res.status(201).json({
-        id: insert.insertId,
-        title,
-        author,
-        year,
-        user_id: userId,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Internal server error', data: null });
-    }
-  }
-);
+  //Attaches JSON content to the response
+  res.status(201).json({
+    id: insert.insertId,
+    title,
+    author,
+    year,
+    userId,
+  });
+});
 
 // Start the Express server
 app.listen(port, () => {
