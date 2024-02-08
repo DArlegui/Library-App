@@ -37,10 +37,35 @@ export const getUserBooks = async () => {
   return data;
 };
 
+export const getUserUpdateBook = async (id: number) => {
+  const res = await fetch(`${API_URL}/books/${id}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${getJwt()}` },
+  });
+  const data = await res.json();
+
+  return data;
+};
+
 export const deleteBook = async (id: number) => {
   const res = await fetch(`${API_URL}/books/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${getJwt()}` },
+  });
+
+  const data = await res.json();
+
+  return data;
+};
+
+export const updateBook = async (id: number, body: BookType) => {
+  const res = await fetch(`${API_URL}/books/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getJwt()}`,
+    },
+    body: JSON.stringify(body),
   });
 
   const data = await res.json();

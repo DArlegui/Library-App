@@ -193,6 +193,32 @@ app.delete('/books/:id', async (req, res) => {
   res.status(204).json({ success: true, message: 'Book successfully deleted' });
 });
 
+app.get('/books/:id', async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.user;
+
+  const [book] = await req.db.query('SELECT * FROM books WHERE id = :id AND user_id = :userId', { id, userId });
+
+  if (!book || book.length === 0) {
+    res.status(404).json({ success: false, message: 'Book not found' });
+  } else {
+    res.status(200).json({ success: true, message: 'Book retrieved successfully', data: book });
+  }
+});
+
+app.put('/books/:id', async (req, res) => {
+  const { id } = req.params;
+  const { img_url, title, author, year } = req.body;
+  const { userId } = req.user;
+
+  await req.db.query(
+    'UPDATE books SET img_url = :img_url, title = :title, author = :author, year = :year WHERE id = :id AND user_id = :userId',
+    { img_url, title, author, year, id, userId }
+  );
+
+  res.status(200).json({ success: true, message: 'Book successfully updated' });
+});
+
 // Start the Express server
 app.listen(port, () => {
   console.log(`server started at http://localhost:${port}`);
