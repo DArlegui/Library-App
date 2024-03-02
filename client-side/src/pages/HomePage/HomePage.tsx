@@ -6,6 +6,7 @@ import InputLabel from '../../components/InputLabel';
 
 const HomePage = () => {
   const [book, setBook] = useState<BookType>({ id: 0, img_url: '', title: '', author: '', year: 0 });
+  const [editBook, setEditBook] = useState<BookType>({ id: 0, img_url: '', title: '', author: '', year: 0 });
   const [error, setError] = useState('');
   const [books, setBooks] = useState([]);
 
@@ -13,14 +14,14 @@ const HomePage = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const fetchedBooks = await getUserBooks();
-      console.log(fetchedBooks);
-      setBooks(fetchedBooks.books);
-    };
-
-    fetchData();
+    fetchBooks();
   }, []);
+
+  const fetchBooks = async () => {
+    const fetchedBooks = await getUserBooks();
+    console.log(fetchedBooks);
+    setBooks(fetchedBooks.books);
+  };
 
   const handleCreateBook = async () => {
     if (isNaN(book.year)) {
@@ -33,34 +34,36 @@ const HomePage = () => {
       return;
     }
 
-    // console.log(book);
-    const result = await createBook(book);
-
-    console.log(result);
-    window.location.reload();
-    return;
+    await createBook(book);
+    await fetchBooks();
   };
 
   const handleDeleteBook = async (id: number) => {
-    const result = await deleteBook(id);
-    console.log(result);
-    window.location.reload();
-    return;
+    await deleteBook(id);
+    await fetchBooks();
   };
 
-  const handleEditBook = async (id: number) => {
-    setEditBookId(id);
-    setIsEditing(true);
-    return;
+  const handleEditBook = (id: number) => {
+    const bookToEdit = books.find((b: BookType) => b.id === id);
+    if (bookToEdit) {
+      setEditBook(bookToEdit);
+      setEditBookId(id);
+      setIsEditing(true);
+    }
   };
 
-  const handleUpdateBook = async (id: number) => {
-    const result = await updateBook(id, book);
-    console.log(result);
+  const handleUpdateBook = async (id: number, book: BookType) => {
+    updateBook(id, {
+      id: id,
+      img_url: book.img_url,
+      title: book.title,
+      author: book.author,
+      year: book.year,
+    });
+
     setIsEditing(false);
     setEditBookId(0);
-    window.location.reload();
-    return;
+    await fetchBooks();
   };
 
   return (
@@ -115,24 +118,29 @@ const HomePage = () => {
                   <div className="flex flex-col items-end">
                     <InputLabel
                       inputTitle="Image URL"
-                      changeValue={(str) => setBook((b) => ({ ...b, img_url: str.target.value }))}
+                      changeValue={(str) => setEditBook((prev) => ({ ...prev, img_url: str.target.value }))}
+                      defaultValue={b.img_url}
                     />
                     <InputLabel
                       inputTitle="Title"
-                      changeValue={(str) => setBook((b) => ({ ...b, title: str.target.value }))}
+                      changeValue={(str) => setEditBook((prev) => ({ ...prev, title: str.target.value }))}
+                      defaultValue={b.title}
                     />
                     <InputLabel
                       inputTitle="Author"
-                      changeValue={(str) => setBook((b) => ({ ...b, author: str.target.value }))}
+                      changeValue={(str) => setEditBook((prev) => ({ ...prev, author: str.target.value }))}
+                      defaultValue={b.author}
                     />
                     <InputLabel
                       inputTitle="Year"
-                      changeValue={(str) => setBook((b) => ({ ...b, year: parseInt(str.target.value, 10) }))}
+                      changeValue={(str) => setEditBook((prev) => ({ ...prev, year: parseInt(str.target.value, 10) }))}
+                      defaultValue={b.year.toString()}
                     />
                     <button
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-lg text-md"
                       onClick={() => {
-                        handleUpdateBook(b.id);
+                        handleUpdateBook(b.id, editBook);
+                        setEditBook({ id: 0, img_url: '', title: '', author: '', year: 0 }); // Reset the editBook state
                       }}>
                       Update
                     </button>
